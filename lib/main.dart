@@ -18,7 +18,7 @@ Future<void> deleteLocalMaterialDB() async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await deleteLocalMaterialDB();
+//  await deleteLocalMaterialDB();
   runApp(const MyApp());
 }
 

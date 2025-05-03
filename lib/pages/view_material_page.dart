@@ -29,6 +29,30 @@ class _ViewMaterialPageState extends State<ViewMaterialPage> {
     await _loadMaterials(); // refresh UI
   }
 
+  void _showMaterialDetails(MaterialItem mat) {
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(mat.materialId),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Brand: ${mat.brand}'),
+            Text('Bought From: ${mat.source}'),
+            Text('Price: \$${mat.price.toStringAsFixed(2)}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,24 +64,28 @@ class _ViewMaterialPageState extends State<ViewMaterialPage> {
         itemCount: _materials.length,
         itemBuilder: (_, i) {
           final mat = _materials[i];
-          return Card(
-            color: mat.isOutOfStock ? Colors.grey[300] : null,
-            child: ListTile(
-              leading: Image.file(
-                File(mat.imagePath),
-                width: 50,
-                height: 50,
-                fit: BoxFit.cover,
-              ),
-              title: Text('${mat.materialId} • ${mat.type} (${mat.color})'),
-              subtitle: Text('Weight: ${mat.weight}g'),
-              trailing: mat.isOutOfStock
-                  ? const Text('Out of Stock',
-                  style: TextStyle(color: Colors.red))
-                  : TextButton(
-                child: const Text('Mark Out'),
-                onPressed: () => _markOutOfStock(mat.id!),
-
+          return GestureDetector(
+            onTap: () => _showMaterialDetails(mat),
+            child: Card(
+              color: mat.isOutOfStock ? Colors.grey[300] : Colors.orange.shade50,
+              child: ListTile(
+                leading: Image.file(
+                  File(mat.imagePath),
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.cover,
+                ),
+                title: Text('${mat.materialId} • ${mat.type} (${mat.color})'),
+                subtitle: Text('Weight: ${mat.weight}g'),
+                trailing: mat.isOutOfStock
+                    ? const Text(
+                  'Out of Stock',
+                  style: TextStyle(color: Colors.red),
+                )
+                    : TextButton(
+                  child: const Text('Mark Out'),
+                  onPressed: () => _markOutOfStock(mat.id!),
+                ),
               ),
             ),
           );
