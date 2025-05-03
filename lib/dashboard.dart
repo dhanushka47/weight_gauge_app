@@ -5,6 +5,8 @@ import 'pages/add_printer_page.dart';
 import 'pages/expenses_page.dart';
 import 'pages/add_material_page.dart'; // ✅ import the material page
 import 'pages/view_material_page.dart';
+import 'pages/quotation_page.dart'; // Make sure this matches your folder structure
+import 'pages/business_details_page.dart';
 
 
 
@@ -61,6 +63,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 _dashboardButton(context, 'Per Gram Calculator', Icons.scale),
                 _dashboardButton(context, 'Add Material Stock', Icons.inventory),
                 _dashboardButton(context, 'View Material Stock', Icons.storage),
+                _dashboardButton(context, 'Business Details', Icons.settings),
 
               ],
             ),
@@ -116,6 +119,25 @@ class _DashboardPageState extends State<DashboardPage> {
             MaterialPageRoute(builder: (_) => const ViewMaterialPage()),
           );
         }
+        else if (label == 'Make Quotation') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => QuotationPage()),
+          );
+        } else if (label == 'Make Invoice') {
+          // TODO: Navigate to invoice page when implemented
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Invoice page coming soon!')),
+          );
+        }
+        else if (label == 'Business Details') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const BusinessDetailsPage()),
+          );
+        }
+
+
 
       },
       icon: Icon(icon),
