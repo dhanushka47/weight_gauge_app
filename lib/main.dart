@@ -1,8 +1,24 @@
 import 'package:flutter/material.dart';
+
 import 'theme.dart'; // <-- add this line
 import 'dashboard.dart';
 
-void main() {
+
+
+import 'package:sqflite/sqflite.dart';
+import 'package:path/path.dart';
+
+Future<void> deleteLocalMaterialDB() async {
+  final dbPath = await getDatabasesPath();
+  final path = join(dbPath, 'materials.db');
+  await deleteDatabase(path);
+}
+
+
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await deleteLocalMaterialDB();
   runApp(const MyApp());
 }
 
@@ -62,4 +78,5 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
     );
   }
+
 }

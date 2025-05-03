@@ -14,62 +14,80 @@ class AddMaterialPage extends StatefulWidget {
 
 class _AddMaterialPageState extends State<AddMaterialPage> {
   final _formKey = GlobalKey<FormState>();
-  final _colorController = TextEditingController();
-  final _priceController = TextEditingController();
-  final _weightController = TextEditingController();
   final _brandController = TextEditingController();
-  final _typeController = TextEditingController();
   final _sourceController = TextEditingController();
-  final _dateController = TextEditingController();
+  final _priceController = TextEditingController();
+  final _shippingController = TextEditingController();
+  final _weightController = TextEditingController();
+  final _quantityController = TextEditingController();
 
+  DateTime? _purchaseDate;
   File? _imageFile;
 
-  Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() => _imageFile = File(pickedFile.path));
-    }
-  }
+  String? _selectedType;
+  String? _selectedColor;
 
-  Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: now,
-      firstDate: DateTime(2000),
-      lastDate: DateTime(2100),
-    );
+  final List<String> _materialTypes = [
+    'PLA', 'ABS', 'PETG', 'TPU', 'TPE', 'Nylon', 'PC', 'HIPS',
+    'PVA', 'ASA', 'Carbon Fiber', 'Wood-filled', 'Metal-filled',
+    'Resin', 'Tough Resin', 'Flexible Resin'
+  ];
+
+  final List<String> _colors = [
+    'Black', 'White', 'Grey', 'Red', 'Blue', 'Green', 'Yellow', 'Orange',
+    'Pink', 'Purple', 'Brown', 'Beige', 'Silver', 'Gold', 'Bronze',
+    'Clear / Transparent', 'Translucent Tinted', 'Glow-in-the-dark',
+    'Marble', 'Wood tones', 'Silk', 'Fluorescent'
+  ];
+
+  Future<void> _pickImage() async {
+    final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      _dateController.text = DateFormat('yyyy-MM-dd').format(picked);
+      setState(() => _imageFile = File(picked.path));
     }
   }
 
   Future<void> _saveMaterial() async {
-    if (_formKey.currentState?.validate() != true || _imageFile == null) {
+    if (!_formKey.currentState!.validate() ||
+        _selectedType == null ||
+        _selectedColor == null ||
+        _purchaseDate == null ||
+        _imageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all fields and select an image.')),
+        const SnackBar(content: Text('Please fill in all fields')),
       );
       return;
     }
 
-    final item = MaterialItem(
-      imagePath: _imageFile!.path,
-      color: _colorController.text.trim(),
-      price: double.parse(_priceController.text.trim()),
-      weight: double.parse(_weightController.text.trim()),
-      brand: _brandController.text.trim(),
-      type: _typeController.text.trim(),
-      source: _sourceController.text.trim(),
-      purchaseDate: _dateController.text.trim(),
-    );
+    final quantity = int.tryParse(_quantityController.text.trim()) ?? 1;
+    final List<String> generatedIds = [];
 
-    final newId = await MaterialDatabase.instance.insertMaterial(item);
+    for (int i = 0; i < quantity; i++) {
+      final id = await MaterialDatabase.instance.generateMaterialId(_selectedType!);
+
+      final item = MaterialItem(
+        materialId: id,
+        type: _selectedType!,
+        color: _selectedColor!,
+        brand: _brandController.text.trim(),
+        source: _sourceController.text.trim(),
+        price: double.parse(_priceController.text.trim()),
+        shippingCost: double.parse(_shippingController.text.trim()), // ✅ this line
+        weight: double.parse(_weightController.text.trim()),
+        purchaseDate: DateFormat('yyyy-MM-dd').format(_purchaseDate!),
+        imagePath: _imageFile!.path,
+      );
+
+
+      await MaterialDatabase.instance.insertMaterial(item);
+      generatedIds.add(id);
+    }
 
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Material Saved'),
-        content: Text('Material ID: $newId'),
+        title: const Text('Material(s) Saved'),
+        content: Text('Saved ${generatedIds.length} reels:\n\n${generatedIds.join('\n')}'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -79,15 +97,31 @@ class _AddMaterialPageState extends State<AddMaterialPage> {
       ),
     );
 
-    _formKey.currentState?.reset();
-    _colorController.clear();
-    _priceController.clear();
-    _weightController.clear();
+    _formKey.currentState!.reset();
     _brandController.clear();
-    _typeController.clear();
     _sourceController.clear();
-    _dateController.clear();
-    setState(() => _imageFile = null);
+    _priceController.clear();
+    _shippingController.clear();
+    _weightController.clear();
+    _quantityController.clear();
+
+    setState(() {
+      _selectedColor = null;
+      _selectedType = null;
+      _purchaseDate = null;
+      _imageFile = null;
+    });
+  }
+
+  @override
+  void dispose() {
+    _brandController.dispose();
+    _sourceController.dispose();
+    _priceController.dispose();
+    _shippingController.dispose();
+    _weightController.dispose();
+    _quantityController.dispose();
+    super.dispose();
   }
 
   @override
@@ -104,52 +138,101 @@ class _AddMaterialPageState extends State<AddMaterialPage> {
                 onTap: _pickImage,
                 child: _imageFile == null
                     ? Container(
-                  height: 150,
                   width: 150,
+                  height: 150,
                   color: Colors.grey[300],
-                  child: const Icon(Icons.add_a_photo, size: 50),
+                  child: const Icon(Icons.add_a_photo, size: 40),
                 )
                     : Image.file(_imageFile!, height: 150),
               ),
               const SizedBox(height: 16),
-              TextFormField(
-                controller: _colorController,
-                decoration: const InputDecoration(labelText: 'Material Color'),
-                validator: (val) => val!.isEmpty ? 'Required' : null,
+              DropdownButtonFormField<String>(
+                value: _selectedType,
+                hint: const Text('Select Material Type'),
+                items: _materialTypes
+                    .map((type) => DropdownMenuItem(value: type, child: Text(type)))
+                    .toList(),
+                onChanged: (val) => setState(() => _selectedType = val),
+                validator: (val) => val == null ? 'Required' : null,
               ),
-              TextFormField(
-                controller: _priceController,
-                decoration: const InputDecoration(labelText: 'Price'),
-                keyboardType: TextInputType.number,
-                validator: (val) => val!.isEmpty ? 'Required' : null,
+              const SizedBox(height: 10),
+              DropdownButtonFormField<String>(
+                value: _selectedColor,
+                hint: const Text('Select Color'),
+                items: _colors
+                    .map((color) => DropdownMenuItem(value: color, child: Text(color)))
+                    .toList(),
+                onChanged: (val) => setState(() => _selectedColor = val),
+                validator: (val) => val == null ? 'Required' : null,
               ),
-              TextFormField(
-                controller: _weightController,
-                decoration: const InputDecoration(labelText: 'Weight'),
-                keyboardType: TextInputType.number,
-                validator: (val) => val!.isEmpty ? 'Required' : null,
-              ),
+              const SizedBox(height: 10),
               TextFormField(
                 controller: _brandController,
                 decoration: const InputDecoration(labelText: 'Brand'),
                 validator: (val) => val!.isEmpty ? 'Required' : null,
               ),
               TextFormField(
-                controller: _typeController,
-                decoration: const InputDecoration(labelText: 'Material Type'),
-                validator: (val) => val!.isEmpty ? 'Required' : null,
-              ),
-              TextFormField(
                 controller: _sourceController,
-                decoration: const InputDecoration(labelText: 'Buy From'),
+                decoration: const InputDecoration(labelText: 'Bought From'),
                 validator: (val) => val!.isEmpty ? 'Required' : null,
               ),
               TextFormField(
-                controller: _dateController,
-                readOnly: true,
-                onTap: _pickDate,
-                decoration: const InputDecoration(labelText: 'Purchase Date'),
-                validator: (val) => val!.isEmpty ? 'Required' : null,
+                controller: _priceController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Price Per Reel'),
+                validator: (val) => val!.isEmpty || double.tryParse(val) == null
+                    ? 'Enter valid price'
+                    : null,
+              ),
+              TextFormField(
+                controller: _shippingController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Shipping Cost'),
+                validator: (val) => val!.isEmpty || double.tryParse(val) == null
+                    ? 'Enter valid shipping cost'
+                    : null,
+              ),
+              TextFormField(
+                controller: _weightController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Weight (g)'),
+                validator: (val) => val!.isEmpty || double.tryParse(val) == null
+                    ? 'Enter valid weight'
+                    : null,
+              ),
+              TextFormField(
+                controller: _quantityController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Quantity (No. of Reels)'),
+                validator: (val) => val!.isEmpty || int.tryParse(val) == null
+                    ? 'Enter valid quantity'
+                    : null,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _purchaseDate == null
+                          ? 'No date selected'
+                          : DateFormat('yyyy-MM-dd').format(_purchaseDate!),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime(2020),
+                        lastDate: DateTime.now(),
+                      );
+                      if (picked != null) {
+                        setState(() => _purchaseDate = picked);
+                      }
+                    },
+                    child: const Text('Pick Date'),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
               ElevatedButton.icon(

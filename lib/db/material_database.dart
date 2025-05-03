@@ -10,46 +10,75 @@ class MaterialDatabase {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, 'materials.db');
-
-    _database = await openDatabase(
-      path,
-      version: 1,
-      onCreate: _createDB,
-    );
+    _database = await _initDB('materials.db');
     return _database!;
+  }
+
+  Future<Database> _initDB(String fileName) async {
+    final dbPath = await getDatabasesPath();
+    final path = join(dbPath, fileName);
+
+    return await openDatabase(path, version: 1, onCreate: _createDB);
   }
 
   Future<void> _createDB(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE materials (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        imagePath TEXT NOT NULL,
-        color TEXT NOT NULL,
-        price REAL NOT NULL,
-        weight REAL NOT NULL,
-        brand TEXT NOT NULL,
-        type TEXT NOT NULL,
-        source TEXT NOT NULL,
-        purchaseDate TEXT NOT NULL
-      )
-    ''');
+  CREATE TABLE materials (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    materialId TEXT,
+    type TEXT,
+    color TEXT,
+    brand TEXT,
+    source TEXT,
+    price REAL,
+    shippingCost REAL, -- ✅ add this line
+    weight REAL,
+    purchaseDate TEXT,
+    imagePath TEXT,
+    isOutOfStock INTEGER DEFAULT 0
+  )
+''');
+
   }
 
-  Future<int> insertMaterial(MaterialItem item) async {
+
+  Future<void> insertMaterial(MaterialItem item) async {
     final db = await instance.database;
-    return await db.insert('materials', item.toMap());
+    await db.insert('materials', item.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<List<MaterialItem>> getAllMaterials() async {
     final db = await instance.database;
     final result = await db.query('materials');
-    return result.map((e) => MaterialItem.fromMap(e)).toList();
+    return result.map((map) => MaterialItem.fromMap(map)).toList();
   }
 
-  Future close() async {
-    final db = await database;
-    db?.close();
+  Future<String> generateMaterialId(String type) async {
+    final db = await instance.database;
+    final result = await db.rawQuery(
+      'SELECT COUNT(*) as count FROM materials WHERE type = ?',
+      [type],
+    );
+
+    int count = Sqflite.firstIntValue(result) ?? 0;
+    String prefix = type.substring(0, 3).toUpperCase();
+    String id = '$prefix${(count + 1).toString().padLeft(4, '0')}';
+    return id;
   }
+
+  Future<void> markOutOfStock(int id) async {
+    final db = await instance.database;
+    await db.update(
+      'materials',
+      {'isOutOfStock': 1},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+
+
+
+
 }
+

@@ -4,6 +4,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'pages/add_printer_page.dart';
 import 'pages/expenses_page.dart';
 import 'pages/add_material_page.dart'; // ✅ import the material page
+import 'pages/view_material_page.dart';
+
+
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -56,7 +59,9 @@ class _DashboardPageState extends State<DashboardPage> {
                 _dashboardButton(context, 'Make Quotation', Icons.description),
                 _dashboardButton(context, 'Make Invoice', Icons.receipt),
                 _dashboardButton(context, 'Per Gram Calculator', Icons.scale),
-                _dashboardButton(context, 'Add Material Stock', Icons.inventory), // ✅ New
+                _dashboardButton(context, 'Add Material Stock', Icons.inventory),
+                _dashboardButton(context, 'View Material Stock', Icons.storage),
+
               ],
             ),
             const SizedBox(height: 30),
@@ -105,6 +110,13 @@ class _DashboardPageState extends State<DashboardPage> {
             MaterialPageRoute(builder: (_) => const AddMaterialPage()),
           );
         }
+        else if (label == 'View Material Stock') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const ViewMaterialPage()),
+          );
+        }
+
       },
       icon: Icon(icon),
       label: Text(label),
