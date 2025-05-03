@@ -1,13 +1,15 @@
-// quotation_page.dart
-
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
-import 'pdf_generator.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:weight_gauge/utils/pdf_generator.dart';
 
 class QuotationPage extends StatefulWidget {
+  const QuotationPage({super.key});
+
   @override
-  _QuotationPageState createState() => _QuotationPageState();
+  State<QuotationPage> createState() => _QuotationPageState();
 }
 
 class _QuotationPageState extends State<QuotationPage> {
@@ -28,57 +30,70 @@ class _QuotationPageState extends State<QuotationPage> {
   Future<void> _generatePDF() async {
     final quantity = int.tryParse(quantityController.text) ?? 0;
     final rate = double.tryParse(rateController.text) ?? 0.0;
+    final total = quantity * rate;
 
     if (customerController.text.isEmpty ||
         itemController.text.isEmpty ||
         quantity <= 0 ||
         rate <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please fill all fields correctly")),
+        const SnackBar(content: Text("Please fill all fields correctly")),
       );
       return;
     }
 
-    await generateQuotationPDF(
-      customerName: customerController.text,
-      itemDescription: itemController.text,
-      quantity: quantity,
-      rate: rate,
+    final prefs = await SharedPreferences.getInstance();
+    final logoPath = prefs.getString('logoPath'); // You must store it earlier
+
+    if (logoPath == null || !File(logoPath).existsSync()) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please set a logo in app settings.")),
+      );
+      return;
+    }
+
+    final pdfData = await generateQuotationPdf(
+      logoFile: File(logoPath),
+      customerName: customerController.text.trim(),
+      date: DateFormat('yyyy-MM-dd').format(DateTime.now()),
+      description: '${itemController.text.trim()}\nQty: $quantity\nRate: Rs. ${rate.toStringAsFixed(2)}',
+      total: total,
     );
+
+    await Printing.layoutPdf(onLayout: (_) async => pdfData);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text("Create Quotation"),
-      ),
+      appBar: AppBar(title: const Text("Create Quotation")),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: ListView(
           children: [
             TextField(
               controller: customerController,
-              decoration: InputDecoration(labelText: "Customer Name"),
+              decoration: const InputDecoration(labelText: "Customer Name"),
             ),
             TextField(
               controller: itemController,
-              decoration: InputDecoration(labelText: "Item Description"),
+              decoration: const InputDecoration(labelText: "Item Description"),
             ),
             TextField(
               controller: quantityController,
-              decoration: InputDecoration(labelText: "Quantity"),
+              decoration: const InputDecoration(labelText: "Quantity"),
               keyboardType: TextInputType.number,
             ),
             TextField(
               controller: rateController,
-              decoration: InputDecoration(labelText: "Rate per Unit (Rs)"),
+              decoration: const InputDecoration(labelText: "Rate per Unit (Rs)"),
               keyboardType: TextInputType.number,
             ),
-            SizedBox(height: 30),
-            ElevatedButton(
+            const SizedBox(height: 30),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.picture_as_pdf),
+              label: const Text("Generate Quotation PDF"),
               onPressed: _generatePDF,
-              child: Text("Generate Quotation PDF"),
             ),
           ],
         ),

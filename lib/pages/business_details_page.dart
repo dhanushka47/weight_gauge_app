@@ -4,71 +4,102 @@ import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class BusinessDetailsPage extends StatefulWidget {
-  const BusinessDetailsPage({Key? key}) : super(key: key);
+  const BusinessDetailsPage({super.key});
 
   @override
   State<BusinessDetailsPage> createState() => _BusinessDetailsPageState();
 }
 
 class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
-  final nameController = TextEditingController();
-  final addressController = TextEditingController();
-  File? logoImage;
+  final _nameController = TextEditingController();
+  final _addressController = TextEditingController();
+  final _contactController = TextEditingController();
+  File? _logoFile;
 
   @override
   void initState() {
     super.initState();
-    _loadSavedData();
+    _loadSavedDetails();
   }
 
-  Future<void> _loadSavedData() async {
+  Future<void> _loadSavedDetails() async {
     final prefs = await SharedPreferences.getInstance();
-    nameController.text = prefs.getString('business_name') ?? '';
-    addressController.text = prefs.getString('business_address') ?? '';
-    final logoPath = prefs.getString('business_logo');
-    if (logoPath != null && File(logoPath).existsSync()) {
-      setState(() => logoImage = File(logoPath));
+    _nameController.text = prefs.getString('bizName') ?? '';
+    _addressController.text = prefs.getString('bizAddress') ?? '';
+    _contactController.text = prefs.getString('bizContact') ?? '';
+    final path = prefs.getString('logoPath');
+    if (path != null && File(path).existsSync()) {
+      setState(() => _logoFile = File(path));
     }
-  }
-
-  Future<void> _saveData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('business_name', nameController.text);
-    await prefs.setString('business_address', addressController.text);
-    if (logoImage != null) {
-      await prefs.setString('business_logo', logoImage!.path);
-    }
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Saved successfully')));
   }
 
   Future<void> _pickLogo() async {
     final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
     if (picked != null) {
-      setState(() => logoImage = File(picked.path));
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('logoPath', picked.path);
+      setState(() => _logoFile = File(picked.path));
     }
+  }
+
+  Future<void> _saveBusinessDetails() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('bizName', _nameController.text.trim());
+    await prefs.setString('bizAddress', _addressController.text.trim());
+    await prefs.setString('bizContact', _contactController.text.trim());
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Business details saved")),
+    );
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _addressController.dispose();
+    _contactController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Business Details')),
-      body: Padding(
+      appBar: AppBar(title: const Text('Business Details')),
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
-        child: ListView(
+        child: Column(
           children: [
-            TextField(controller: nameController, decoration: InputDecoration(labelText: 'Business Name')),
-            TextField(controller: addressController, decoration: InputDecoration(labelText: 'Business Address')),
-            SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: _pickLogo,
-              icon: Icon(Icons.image),
-              label: Text('Pick Business Logo'),
+            GestureDetector(
+              onTap: _pickLogo,
+              child: _logoFile == null
+                  ? Container(
+                width: 100,
+                height: 100,
+                color: Colors.grey[300],
+                child: const Icon(Icons.image, size: 40),
+              )
+                  : Image.file(_logoFile!, height: 100),
             ),
-            if (logoImage != null) Image.file(logoImage!, height: 100),
-            SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _saveData,
-              child: Text('Save'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(labelText: 'Business Name'),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _addressController,
+              decoration: const InputDecoration(labelText: 'Address'),
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _contactController,
+              decoration: const InputDecoration(labelText: 'Contact Info'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.save),
+              label: const Text('Save Details'),
+              onPressed: _saveBusinessDetails,
             ),
           ],
         ),
