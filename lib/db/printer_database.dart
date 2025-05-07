@@ -41,4 +41,9 @@ class PrinterDatabase {
     final result = await db.query('printers');
     return result.map((e) => Printer.fromMap(e)).toList();
   }
+
+
+  Future<List<Printer>> fetchPrinters() async {
+    return await getAllPrinters(); // Alias for consistency
+  }
 }

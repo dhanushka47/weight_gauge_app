@@ -25,7 +25,7 @@ Future<Uint8List> generateQuotationPdf({
               mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
               children: [
                 pw.Image(image, width: 80), // Logo on left
-                pw.Text('Quotation', style: pw.TextStyle(fontSize: 22, fontWeight: pw.FontWeight.bold)),
+                pw.Text('Quotation', style: pw.TextStyle(fontSize: 30, fontWeight: pw.FontWeight.bold)),
               ],
             ),
             pw.SizedBox(height: 20),

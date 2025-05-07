@@ -77,6 +77,9 @@ class MaterialDatabase {
   }
 
 
+  Future<List<MaterialItem>> fetchMaterials() async {
+    return await getAllMaterials(); // Alias for consistency
+  }
 
 
 

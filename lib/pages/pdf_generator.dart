@@ -17,9 +17,9 @@ Future<void> generateQuotationPDF({
       build: (context) => pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text("Quotation", style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold)),
+          pw.Text("Quotation", style: pw.TextStyle(fontSize: 30, fontWeight: pw.FontWeight.bold)),
           pw.SizedBox(height: 10),
-          pw.Text("Date: ${date.day}/${date.month}/${date.year}", style: pw.TextStyle(fontSize: 10)),
+          pw.Text("Date: ${date.day}/${date.month}/${date.year}", style: pw.TextStyle(fontSize: 20)),
           pw.SizedBox(height: 5),
           pw.Text("Customer: $customerName", style: pw.TextStyle(fontSize: 10)),
           pw.SizedBox(height: 20),
