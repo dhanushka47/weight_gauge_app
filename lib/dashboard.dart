@@ -3,12 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'pages/add_printer_page.dart';
 import 'pages/expenses_page.dart';
-import 'pages/add_material_page.dart'; // ✅ import the material page
+import 'pages/add_material_page.dart';
 import 'pages/view_material_page.dart';
-import 'pages/quotation_page.dart'; // Make sure this matches your folder structure
+import 'pages/quotation_page.dart';
 import 'pages/business_details_page.dart';
-
-
+import 'pages/quotation_dashboard_page.dart'; // <- Required for 'Saved Quotations'
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -21,7 +20,7 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
-    _requestPermissions(); // 👈 Ask for permissions on app launch
+    _requestPermissions();
   }
 
   Future<void> _requestPermissions() async {
@@ -64,7 +63,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 _dashboardButton(context, 'Add Material Stock', Icons.inventory),
                 _dashboardButton(context, 'View Material Stock', Icons.storage),
                 _dashboardButton(context, 'Business Details', Icons.settings),
-
+                _dashboardButton(context, 'Saved Quotations', Icons.folder_copy),
               ],
             ),
             const SizedBox(height: 30),
@@ -97,48 +96,34 @@ class _DashboardPageState extends State<DashboardPage> {
         backgroundColor: Theme.of(context).colorScheme.secondary,
       ),
       onPressed: () {
-        if (label == 'Add Printer') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddPrinterPage()),
-          );
-        } else if (label == 'Expenses') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ExpensesPage()),
-          );
-        } else if (label == 'Add Material Stock') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AddMaterialPage()),
-          );
+        switch (label) {
+          case 'Add Printer':
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AddPrinterPage()));
+            break;
+          case 'Expenses':
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpensesPage()));
+            break;
+          case 'Make Quotation':
+            Navigator.push(context, MaterialPageRoute(builder: (_) => QuotationPage()));
+            break;
+          case 'Add Material Stock':
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const AddMaterialPage()));
+            break;
+          case 'View Material Stock':
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ViewMaterialPage()));
+            break;
+          case 'Business Details':
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const BusinessDetailsPage()));
+            break;
+          case 'Saved Quotations':
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const QuotationDashboardPage()));
+            break;
+          case 'Make Invoice':
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Invoice page coming soon!')),
+            );
+            break;
         }
-        else if (label == 'View Material Stock') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const ViewMaterialPage()),
-          );
-        }
-        else if (label == 'Make Quotation') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => QuotationPage()),
-          );
-        } else if (label == 'Make Invoice') {
-          // TODO: Navigate to invoice page when implemented
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Invoice page coming soon!')),
-          );
-        }
-        else if (label == 'Business Details') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const BusinessDetailsPage()),
-          );
-        }
-
-
-
       },
       icon: Icon(icon),
       label: Text(label),
