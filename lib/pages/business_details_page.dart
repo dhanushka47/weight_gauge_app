@@ -3,6 +3,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:restart_app/restart_app.dart';
+import 'package:path/path.dart' as p;
+
 import '../models/account.dart';
 
 class BusinessDetailsPage extends StatefulWidget {
@@ -86,10 +90,7 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
             onPressed: () async {
               final account = BankAccount(
@@ -112,6 +113,83 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
   Future<void> _deleteAccount(int index) async {
     setState(() => _accounts.removeAt(index));
     await _saveAccounts();
+  }
+
+  Future<void> _resetEntireApp() async {
+    final _pwController = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Reset Confirmation'),
+        content: TextField(
+          controller: _pwController,
+          obscureText: true,
+          decoration: const InputDecoration(
+            labelText: 'Enter Admin Password',
+            hintText: 'Default: 1234@',
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(
+            onPressed: () {
+              if (_pwController.text.trim() == '1234@') {
+                Navigator.pop(context, true);
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('❌ Incorrect password')),
+                );
+              }
+            },
+            child: const Text('Confirm'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
+      final dbPath = await getDatabasesPath();
+      final dbNames = ['invoice.db', 'quotation.db', 'customer.db', 'material.db'];
+      for (final name in dbNames) {
+        final path = p.join(dbPath, name);
+        if (await File(path).exists()) {
+          await deleteDatabase(path);
+        }
+      }
+
+      final rootDir = Directory('/storage/emulated/0/Weight Gauge');
+      if (await rootDir.exists()) {
+        await rootDir.delete(recursive: true);
+      }
+
+      // Recreate folders
+      for (final folder in ['pdfs', 'logs', 'database']) {
+        final dir = Directory('${rootDir.path}/$folder');
+        if (!await dir.exists()) {
+          await dir.create(recursive: true);
+        }
+      }
+
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ App reset successful. Restarting...')),
+      );
+
+      await Future.delayed(const Duration(seconds: 2));
+      Restart.restartApp();
+
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Reset failed: $e')),
+      );
+    }
   }
 
   @override
@@ -174,7 +252,7 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
                   onPressed: _addAccountPopup,
                   icon: const Icon(Icons.add, size: 18),
                   label: const Text('Add Account'),
-                )
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -195,6 +273,20 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
                   ),
                 );
               }),
+            const SizedBox(height: 30),
+            const Divider(),
+            Center(
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.delete_forever),
+                label: const Text('Reset Entire App'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                ),
+                onPressed: _resetEntireApp,
+              ),
+            ),
           ],
         ),
       ),

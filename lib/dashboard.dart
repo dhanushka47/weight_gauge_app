@@ -37,6 +37,7 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
     _requestPermissions();
     _loadMaterials();
+    _loadSummaryData();
     // Auto-refresh every 5 seconds
     _refreshTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
       _loadMaterials();
@@ -44,6 +45,17 @@ class _DashboardPageState extends State<DashboardPage> {
 
     });
   }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
+
+
+
+
   Future<void> _loadSummaryData() async {
     final totalInvoices = await InvoiceDatabase.instance.getInvoiceCount();
     final paidInvoices = await InvoiceDatabase.instance.getPaidInvoiceCount();
