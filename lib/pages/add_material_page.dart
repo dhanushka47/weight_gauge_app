@@ -59,6 +59,14 @@ class _AddMaterialPageState extends State<AddMaterialPage> {
       return;
     }
 
+    final cleanedType = _selectedType!.replaceAll(RegExp(r'\s+'), '');
+    if (cleanedType.length < 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Material type must have at least 1 character')),
+      );
+      return;
+    }
+
     final quantity = int.tryParse(_quantityController.text.trim()) ?? 1;
     final double weight = double.parse(_weightController.text.trim());
     final List<String> generatedIds = [];
@@ -92,7 +100,9 @@ class _AddMaterialPageState extends State<AddMaterialPage> {
         content: Text('Saved ${generatedIds.length} reels:\n\n${generatedIds.join('\n')}'),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+            },
             child: const Text('OK'),
           ),
         ],

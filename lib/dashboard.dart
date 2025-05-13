@@ -14,6 +14,9 @@ import 'pages/quotation_dashboard_page.dart';
 import 'pages/invoices_page.dart';
 import 'dart:async';
 import 'db/invoice_database.dart';
+import 'pages/manage_customers_page.dart';
+import 'pages/about_us_page.dart';
+
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -174,12 +177,12 @@ class _DashboardPageState extends State<DashboardPage> {
               //  _dashboardButton(context, 'Expenses', Icons.money),
                 //  _dashboardButton(context, 'Make Invoice', Icons.receipt),
              //   _dashboardButton(context, 'Per Gram Calculator', Icons.scale),
-
-                _dashboardButton(context, 'View Material Stock', Icons.storage),
-
+                _dashboardButton(context, 'Manage Customers', Icons.people),
                 _dashboardButton(context, 'Saved Quotations', Icons.folder_copy),
                 _dashboardButton(context, 'Invoices', Icons.receipt_long),
                 _dashboardButton(context, 'Business Details', Icons.settings),
+                _dashboardButton(context, 'About Us', Icons.info),
+
               ],
             ),
           ],
@@ -189,47 +192,60 @@ class _DashboardPageState extends State<DashboardPage> {
   }
 
   Widget _dashboardButton(BuildContext context, String label, IconData icon) {
-    return ElevatedButton.icon(
-      style: ElevatedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        textStyle: const TextStyle(fontWeight: FontWeight.w600),
-        backgroundColor: Theme.of(context).colorScheme.secondary,
+    return SizedBox(
+      width: 160,  // ⬅️ set fixed width
+      height: 56,  // ⬅️ set fixed height
+      child: ElevatedButton.icon(
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          textStyle: const TextStyle(fontWeight: FontWeight.w600),
+          backgroundColor: Theme.of(context).colorScheme.secondary,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+        onPressed: () {
+          switch (label) {
+            case 'Add Printer':
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const AddPrinterPage()));
+              break;
+            case 'Expenses':
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpensesPage()));
+              break;
+            case 'Make Quotation':
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const QuotationPage()));
+              break;
+            case 'Add Material Stock':
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const AddMaterialPage()));
+              break;
+            case 'View Material Stock':
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const ViewMaterialPage()));
+              break;
+            case 'Business Details':
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const BusinessDetailsPage()));
+              break;
+            case 'Saved Quotations':
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const QuotationDashboardPage()));
+              break;
+            case 'Make Invoice':
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Invoice page coming soon!')),
+              );
+              break;
+            case 'Invoices':
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const InvoicesPage()));
+              break;
+            case 'Manage Customers':
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const ManageCustomersPage()));
+              break;
+            case 'About Us':
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutUsPage()));
+              break;
+
+          }
+        },
+        icon: Icon(icon, size: 20),
+        label: Text(label, overflow: TextOverflow.ellipsis),
       ),
-      onPressed: () {
-        switch (label) {
-          case 'Add Printer':
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const AddPrinterPage()));
-            break;
-          case 'Expenses':
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const ExpensesPage()));
-            break;
-          case 'Make Quotation':
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const QuotationPage()));
-            break;
-          case 'Add Material Stock':
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const AddMaterialPage()));
-            break;
-          case 'View Material Stock':
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const ViewMaterialPage()));
-            break;
-          case 'Business Details':
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const BusinessDetailsPage()));
-            break;
-          case 'Saved Quotations':
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const QuotationDashboardPage()));
-            break;
-          case 'Make Invoice':
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Invoice page coming soon!')),
-            );
-            break;
-          case 'Invoices':
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const InvoicesPage()));
-            break;
-        }
-      },
-      icon: Icon(icon),
-      label: Text(label),
     );
   }
+
 }

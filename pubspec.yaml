@@ -41,7 +41,8 @@ dependencies:
   printing: ^5.14.2
   shared_preferences: ^2.5.3
   fl_chart: ^1.0.0
-
+  url_launcher: ^6.3.1
+  package_info_plus: ^8.3.0
 
 
   # The following adds the Cupertino Icons font to your application.
@@ -64,6 +65,8 @@ dev_dependencies:
 
 # The following section is specific to Flutter packages.
 flutter:
+  assets:
+    - assets/creator.png
 
   # The following line ensures that the Material Icons font is
   # included with your application, so that you can use the icons in
