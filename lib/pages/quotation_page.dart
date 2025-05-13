@@ -5,7 +5,7 @@ import '../db/customer_database.dart';
 import '../db/material_database.dart';
 import '../db/printer_database.dart';
 import '../models/customer.dart';
-import '../models/material.dart'; // Ensure this defines MaterialModel
+import '../models/material.dart';
 import '../models/printer.dart';
 import 'quotation_preview_page.dart';
 
@@ -29,6 +29,8 @@ class _QuotationPageState extends State<QuotationPage> {
   Customer? _selectedCustomer;
   Printer? _selectedPrinter;
   MaterialModel? _selectedMaterial;
+
+  bool _showAddCustomerFields = false;
 
   List<Customer> _customers = [];
   List<Printer> _printers = [];
@@ -59,9 +61,7 @@ class _QuotationPageState extends State<QuotationPage> {
   }
 
   Future<void> _saveCustomer() async {
-    if (_nameController.text.isEmpty ||
-        _phoneController.text.isEmpty ||
-        _locationController.text.isEmpty) {
+    if (_nameController.text.isEmpty || _phoneController.text.isEmpty || _locationController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Fill all customer fields')),
       );
@@ -75,21 +75,23 @@ class _QuotationPageState extends State<QuotationPage> {
     );
 
     await CustomerDatabase.instance.insertCustomer(customer);
-    _nameController.clear();
-    _phoneController.clear();
-    _locationController.clear();
     await _loadCustomers();
+
+    final added = _customers.last;
+    setState(() {
+      _selectedCustomer = added;
+      _showAddCustomerFields = false;
+      _nameController.clear();
+      _phoneController.clear();
+      _locationController.clear();
+    });
   }
 
   void _addItem() {
     final weight = double.tryParse(_weightController.text.trim());
     final price = double.tryParse(_pricePerGramController.text.trim());
 
-    if (_descController.text.isEmpty ||
-        _selectedPrinter == null ||
-        _selectedMaterial == null ||
-        weight == null ||
-        price == null) {
+    if (_descController.text.isEmpty || _selectedPrinter == null || _selectedMaterial == null || weight == null || price == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Fill all item fields correctly')),
       );
@@ -133,25 +135,51 @@ class _QuotationPageState extends State<QuotationPage> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('1. Add or Select Customer', style: TextStyle(fontWeight: FontWeight.bold)),
-          TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Name')),
-          TextField(controller: _phoneController, decoration: const InputDecoration(labelText: 'Phone')),
-          TextField(controller: _locationController, decoration: const InputDecoration(labelText: 'Location')),
-          ElevatedButton.icon(
-            onPressed: _saveCustomer,
-            icon: const Icon(Icons.save),
-            label: const Text('Save Customer'),
+          const Text('1. Select or Add Customer', style: TextStyle(fontWeight: FontWeight.bold)),
+          DropdownButton<String>(
+            isExpanded: true,
+            value: _selectedCustomer?.name ?? (_showAddCustomerFields ? 'add' : null),
+            hint: const Text('Select Customer'),
+            items: [
+              ..._customers.map((c) => DropdownMenuItem(
+                value: c.name,
+                child: Text('${c.name} (${c.location})'),
+              )),
+              const DropdownMenuItem(value: 'add', child: Text('➕ Add New Customer')),
+            ],
+            onChanged: (value) {
+              if (value == 'add') {
+                setState(() {
+                  _showAddCustomerFields = true;
+                  _selectedCustomer = null;
+                });
+              } else {
+                setState(() {
+                  _selectedCustomer = _customers.firstWhere((c) => c.name == value);
+                  _showAddCustomerFields = false;
+                });
+              }
+            },
           ),
-          const Divider(),
 
-          const Text('Proposed Delivery Date'),
+          if (_showAddCustomerFields) ...[
+            TextField(controller: _nameController, decoration: const InputDecoration(labelText: 'Name')),
+            TextField(controller: _phoneController, decoration: const InputDecoration(labelText: 'Phone')),
+            TextField(controller: _locationController, decoration: const InputDecoration(labelText: 'Location')),
+            ElevatedButton.icon(
+              onPressed: _saveCustomer,
+              icon: const Icon(Icons.save),
+              label: const Text('Save Customer'),
+            ),
+          ],
+
+          const Divider(height: 30),
+          const Text('2. Proposed Delivery Date', style: TextStyle(fontWeight: FontWeight.bold)),
           Row(
             children: [
               Expanded(
                 child: Text(
-                  _deliveryDate == null
-                      ? 'No date selected'
-                      : DateFormat('yyyy-MM-dd').format(_deliveryDate!),
+                  _deliveryDate == null ? 'No date selected' : DateFormat('yyyy-MM-dd').format(_deliveryDate!),
                 ),
               ),
               ElevatedButton.icon(
@@ -170,21 +198,9 @@ class _QuotationPageState extends State<QuotationPage> {
               ),
             ],
           ),
-          const Divider(),
-
-          const Text('Select Existing Customer'),
-          DropdownButton<Customer>(
-            isExpanded: true,
-            value: _selectedCustomer,
-            hint: const Text('Select Customer'),
-            items: _customers.map((c) {
-              return DropdownMenuItem(value: c, child: Text('${c.name} (${c.location})'));
-            }).toList(),
-            onChanged: (val) => setState(() => _selectedCustomer = val),
-          ),
 
           const Divider(height: 30),
-          const Text('2. Add Printing Items', style: TextStyle(fontWeight: FontWeight.bold)),
+          const Text('3. Add Printing Items', style: TextStyle(fontWeight: FontWeight.bold)),
           TextField(controller: _descController, decoration: const InputDecoration(labelText: 'Item Name')),
           DropdownButton<Printer>(
             isExpanded: true,
@@ -209,11 +225,24 @@ class _QuotationPageState extends State<QuotationPage> {
             items: _materials.map((mat) {
               return DropdownMenuItem(
                 value: mat,
-                child: Text('${mat.materialId} • ${mat.weight}g'),
+                child: Row(
+                  children: [
+                    if (mat.imagePath.isNotEmpty && File(mat.imagePath).existsSync())
+                      Image.file(File(mat.imagePath), width: 30, height: 30),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${mat.materialId} • Avail: ${mat.availableGrams.toStringAsFixed(1)}g',
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
               );
             }).toList(),
             onChanged: (val) => setState(() => _selectedMaterial = val),
           ),
+
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -253,7 +282,6 @@ class _QuotationPageState extends State<QuotationPage> {
           ..._items.asMap().entries.map((e) {
             final i = e.value;
             final total = (i['weight'] * i['price']);
-
             return Card(
               color: Colors.orange.shade50,
               child: ListTile(

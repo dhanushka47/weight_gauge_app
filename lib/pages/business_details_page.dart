@@ -67,6 +67,7 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
   }
 
   void _addAccountPopup() {
+    final accountNameController = TextEditingController();
     final bankController = TextEditingController();
     final branchController = TextEditingController();
     final accountNoController = TextEditingController();
@@ -78,6 +79,7 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            TextField(controller: accountNameController, decoration: const InputDecoration(labelText: 'Account Name')),
             TextField(controller: bankController, decoration: const InputDecoration(labelText: 'Bank Name')),
             TextField(controller: branchController, decoration: const InputDecoration(labelText: 'Branch')),
             TextField(controller: accountNoController, decoration: const InputDecoration(labelText: 'Account Number')),
@@ -91,6 +93,7 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
           ElevatedButton(
             onPressed: () async {
               final account = BankAccount(
+                accountName: accountNameController.text.trim(),
                 bankName: bankController.text.trim(),
                 branch: branchController.text.trim(),
                 accountNumber: accountNoController.text.trim(),
@@ -183,7 +186,7 @@ class _BusinessDetailsPageState extends State<BusinessDetailsPage> {
                 final acc = entry.value;
                 return Card(
                   child: ListTile(
-                    title: Text('${acc.bankName} (${acc.branch})'),
+                    title: Text('${acc.accountName} - ${acc.bankName} (${acc.branch})'),
                     subtitle: Text('Account No: ${acc.accountNumber}'),
                     trailing: IconButton(
                       icon: const Icon(Icons.delete, color: Colors.red),
