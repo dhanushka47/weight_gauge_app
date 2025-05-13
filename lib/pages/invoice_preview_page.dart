@@ -2,7 +2,6 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-
 import 'package:printing/printing.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -40,6 +39,10 @@ class InvoicePreviewPage extends StatelessWidget {
       groupedByPrinter.putIfAbsent(printer, () => []).add(item);
     }
 
+    final double total = items.fold(0.0, (sum, item) {
+      return sum + ((item['weight'] as num) * (item['price'] as num));
+    });
+
     pdf.addPage(
       pw.Page(
         build: (context) {
@@ -66,12 +69,11 @@ class InvoicePreviewPage extends StatelessWidget {
                 pw.SizedBox(height: 12),
                 pw.Text('Customer: ${quotation.customer}'),
                 pw.Text('Phone: ${quotation.phone}'),
-                pw.Text('Location: ${quotation.location}'),
+                // Removed: pw.Text('Location: ...'),
                 pw.Text('Delivery Date: ${quotation.deliveryDate}',
                     style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
                 pw.SizedBox(height: 10),
 
-                // Grouped by printer
                 ...groupedByPrinter.entries.map((entry) {
                   final printer = entry.key;
                   final data = entry.value;
@@ -85,7 +87,7 @@ class InvoicePreviewPage extends StatelessWidget {
                       data: List.generate(data.length, (index) {
                         final item = data[index];
                         final material = item['material'];
-                        final total = item['weight'] * item['price'];
+                        final itemTotal = (item['weight'] as num) * (item['price'] as num);
                         return [
                           '${index + 1}',
                           item['description'],
@@ -93,7 +95,7 @@ class InvoicePreviewPage extends StatelessWidget {
                           '${item['infill']}%',
                           '${item['weight']}g',
                           'Rs. ${item['price'].toStringAsFixed(2)}',
-                          'Rs. ${total.toStringAsFixed(2)}',
+                          'Rs. ${itemTotal.toStringAsFixed(2)}',
                         ];
                       }),
                     ),
@@ -104,7 +106,7 @@ class InvoicePreviewPage extends StatelessWidget {
                 pw.Align(
                   alignment: pw.Alignment.centerRight,
                   child: pw.Text(
-                    'Grand Total: Rs. ${quotation.total.toStringAsFixed(2)}',
+                    'Grand Total: Rs. ${total.toStringAsFixed(2)}',
                     style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
                   ),
                 ),

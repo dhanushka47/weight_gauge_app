@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../db/material_database.dart';
-import '../models/material.dart';
+import '../models/material.dart'; // must define MaterialModel
 
 class ViewMaterialPage extends StatefulWidget {
   const ViewMaterialPage({super.key});
@@ -11,7 +11,7 @@ class ViewMaterialPage extends StatefulWidget {
 }
 
 class _ViewMaterialPageState extends State<ViewMaterialPage> {
-  List<MaterialItem> _materials = [];
+  List<MaterialModel> _materials = [];
 
   @override
   void initState() {
@@ -29,7 +29,7 @@ class _ViewMaterialPageState extends State<ViewMaterialPage> {
     await _loadMaterials(); // refresh UI
   }
 
-  void _showMaterialDetails(MaterialItem mat) {
+  void _showMaterialDetails(MaterialModel mat) {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -40,7 +40,9 @@ class _ViewMaterialPageState extends State<ViewMaterialPage> {
           children: [
             Text('Brand: ${mat.brand}'),
             Text('Bought From: ${mat.source}'),
-            Text('Price: \$${mat.price.toStringAsFixed(2)}'),
+            Text('Price: Rs. ${mat.price.toStringAsFixed(2)}'),
+            Text('Weight: ${mat.weight}g'),
+            Text('Available: ${mat.availableGrams}g'),
           ],
         ),
         actions: [

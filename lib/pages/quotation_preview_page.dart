@@ -1,17 +1,18 @@
 import 'dart:io';
 import 'dart:typed_data';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+
 import '../models/account.dart';
 import '../models/printer.dart' as app;
-import '../models/material.dart';
+import '../models/material.dart'; // <- This contains MaterialModel
 import '../db/quotation_database.dart';
 import '../models/quotation.dart';
-import 'dart:convert';
 
 class QuotationPreviewPage extends StatelessWidget {
   final String customerName;
@@ -90,7 +91,7 @@ class QuotationPreviewPage extends StatelessWidget {
                     data: List.generate(printerItems.length, (index) {
                       final item = printerItems[index];
                       final total = item['weight'] * item['price'];
-                      final mat = item['material'] as MaterialItem;
+                      final mat = item['material'] as MaterialModel;
                       final materialText = '${mat.type} - ${mat.color}';
                       return [
                         '${index + 1}',
@@ -117,7 +118,8 @@ class QuotationPreviewPage extends StatelessWidget {
 
               if (accounts.isNotEmpty) ...[
                 pw.SizedBox(height: 20),
-                pw.Text('You can make bank transfer to the following accounts and send the proof of slip:', style: pw.TextStyle(fontSize: 10)),
+                pw.Text('You can make bank transfer to the following accounts and send the proof of slip:',
+                    style: pw.TextStyle(fontSize: 10)),
                 pw.SizedBox(height: 8),
                 pw.Table.fromTextArray(
                   headers: ['Bank', 'Branch', 'Account No'],
@@ -148,7 +150,7 @@ class QuotationPreviewPage extends StatelessWidget {
     final encodedItems = items.map((item) {
       final newItem = Map<String, dynamic>.from(item);
       newItem['printer'] = (item['printer'] as app.Printer).name;
-      final mat = newItem['material'] as MaterialItem;
+      final mat = newItem['material'] as MaterialModel;
       newItem['material'] = {
         'materialId': mat.materialId,
         'type': mat.type,
@@ -166,6 +168,7 @@ class QuotationPreviewPage extends StatelessWidget {
       total: total,
       createdAt: DateTime.now().toIso8601String(),
       itemsJson: jsonEncode(encodedItems),
+      status: 'pending',
     );
 
     await QuotationDatabase.instance.insertQuotation(quotation);

@@ -60,24 +60,26 @@ class _AddMaterialPageState extends State<AddMaterialPage> {
     }
 
     final quantity = int.tryParse(_quantityController.text.trim()) ?? 1;
+    final double weight = double.parse(_weightController.text.trim());
     final List<String> generatedIds = [];
 
     for (int i = 0; i < quantity; i++) {
       final id = await MaterialDatabase.instance.generateMaterialId(_selectedType!);
 
-      final item = MaterialItem(
+      final item = MaterialModel(
         materialId: id,
         type: _selectedType!,
         color: _selectedColor!,
         brand: _brandController.text.trim(),
         source: _sourceController.text.trim(),
         price: double.parse(_priceController.text.trim()),
-        shippingCost: double.parse(_shippingController.text.trim()), // ✅ this line
-        weight: double.parse(_weightController.text.trim()),
+        shippingCost: double.parse(_shippingController.text.trim()),
+        weight: weight,
         purchaseDate: DateFormat('yyyy-MM-dd').format(_purchaseDate!),
         imagePath: _imageFile!.path,
+        isOutOfStock: false,
+        availableGrams: weight,
       );
-
 
       await MaterialDatabase.instance.insertMaterial(item);
       generatedIds.add(id);

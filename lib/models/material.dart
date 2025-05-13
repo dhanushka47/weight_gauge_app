@@ -1,4 +1,6 @@
-class MaterialItem {
+import 'dart:convert';
+
+class MaterialModel {
   final int? id;
   final String materialId;
   final String type;
@@ -11,9 +13,9 @@ class MaterialItem {
   final String purchaseDate;
   final String imagePath;
   final bool isOutOfStock;
-  double availableGrams; // ✅ NEW: mutable so it can be updated
+  final double availableGrams;
 
-  MaterialItem({
+  MaterialModel({
     this.id,
     required this.materialId,
     required this.type,
@@ -25,39 +27,81 @@ class MaterialItem {
     required this.weight,
     required this.purchaseDate,
     required this.imagePath,
-    this.isOutOfStock = false,
-    this.availableGrams = 0.0, // ✅ default to 0.0
+    required this.isOutOfStock,
+    required this.availableGrams,
   });
 
-  Map<String, dynamic> toMap() => {
-    'id': id,
-    'materialId': materialId,
-    'type': type,
-    'color': color,
-    'brand': brand,
-    'source': source,
-    'price': price,
-    'shippingCost': shippingCost,
-    'weight': weight,
-    'purchaseDate': purchaseDate,
-    'imagePath': imagePath,
-    'isOutOfStock': isOutOfStock ? 1 : 0,
-    'availableGrams': availableGrams, // ✅ add to map
-  };
+  MaterialModel copyWith({
+    int? id,
+    String? materialId,
+    String? type,
+    String? color,
+    String? brand,
+    String? source,
+    double? price,
+    double? shippingCost,
+    double? weight,
+    String? purchaseDate,
+    String? imagePath,
+    bool? isOutOfStock,
+    double? availableGrams,
+  }) {
+    return MaterialModel(
+      id: id ?? this.id,
+      materialId: materialId ?? this.materialId,
+      type: type ?? this.type,
+      color: color ?? this.color,
+      brand: brand ?? this.brand,
+      source: source ?? this.source,
+      price: price ?? this.price,
+      shippingCost: shippingCost ?? this.shippingCost,
+      weight: weight ?? this.weight,
+      purchaseDate: purchaseDate ?? this.purchaseDate,
+      imagePath: imagePath ?? this.imagePath,
+      isOutOfStock: isOutOfStock ?? this.isOutOfStock,
+      availableGrams: availableGrams ?? this.availableGrams,
+    );
+  }
 
-  factory MaterialItem.fromMap(Map<String, dynamic> map) => MaterialItem(
-    id: map['id'],
-    materialId: map['materialId'],
-    type: map['type'],
-    color: map['color'],
-    brand: map['brand'],
-    source: map['source'],
-    price: map['price'],
-    shippingCost: map['shippingCost'] ?? 0.0,
-    weight: map['weight'],
-    purchaseDate: map['purchaseDate'],
-    imagePath: map['imagePath'],
-    isOutOfStock: map['isOutOfStock'] == 1,
-    availableGrams: (map['availableGrams'] ?? 0.0) * 1.0, // ✅ support old data
-  );
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'materialId': materialId,
+      'type': type,
+      'color': color,
+      'brand': brand,
+      'source': source,
+      'price': price,
+      'shippingCost': shippingCost,
+      'weight': weight,
+      'purchaseDate': purchaseDate,
+      'imagePath': imagePath,
+      'isOutOfStock': isOutOfStock ? 1 : 0,
+      'availableGrams': availableGrams,
+    };
+  }
+
+  factory MaterialModel.fromMap(Map<String, dynamic> map) {
+    return MaterialModel(
+      id: map['id'],
+      materialId: map['materialId'],
+      type: map['type'],
+      color: map['color'],
+      brand: map['brand'],
+      source: map['source'],
+      price: (map['price'] as num).toDouble(),
+      shippingCost: (map['shippingCost'] as num).toDouble(),
+      weight: (map['weight'] as num).toDouble(),
+      purchaseDate: map['purchaseDate'],
+      imagePath: map['imagePath'],
+      isOutOfStock: map['isOutOfStock'] == 1,
+      availableGrams: (map['availableGrams'] as num).toDouble(),
+    );
+  }
+
+  /// Optional: JSON serialization support
+  String toJsonString() => jsonEncode(toMap());
+
+  factory MaterialModel.fromJsonString(String source) =>
+      MaterialModel.fromMap(jsonDecode(source));
 }

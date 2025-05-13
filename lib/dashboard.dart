@@ -8,6 +8,7 @@ import 'pages/view_material_page.dart';
 import 'pages/quotation_page.dart';
 import 'pages/business_details_page.dart';
 import 'pages/quotation_dashboard_page.dart'; // <- Required for 'Saved Quotations'
+import 'pages/invoices_page.dart'; // ✅ Add this
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -64,6 +65,8 @@ class _DashboardPageState extends State<DashboardPage> {
                 _dashboardButton(context, 'View Material Stock', Icons.storage),
                 _dashboardButton(context, 'Business Details', Icons.settings),
                 _dashboardButton(context, 'Saved Quotations', Icons.folder_copy),
+                _dashboardButton(context, 'Invoices', Icons.receipt_long),
+
               ],
             ),
             const SizedBox(height: 30),
@@ -123,6 +126,10 @@ class _DashboardPageState extends State<DashboardPage> {
               const SnackBar(content: Text('Invoice page coming soon!')),
             );
             break;
+          case 'Invoices':
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const InvoicesPage()));
+            break;
+
         }
       },
       icon: Icon(icon),

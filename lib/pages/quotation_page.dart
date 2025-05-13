@@ -5,7 +5,7 @@ import '../db/customer_database.dart';
 import '../db/material_database.dart';
 import '../db/printer_database.dart';
 import '../models/customer.dart';
-import '../models/material.dart';
+import '../models/material.dart'; // Ensure this defines MaterialModel
 import '../models/printer.dart';
 import 'quotation_preview_page.dart';
 
@@ -28,11 +28,11 @@ class _QuotationPageState extends State<QuotationPage> {
   DateTime? _deliveryDate;
   Customer? _selectedCustomer;
   Printer? _selectedPrinter;
-  MaterialItem? _selectedMaterial;
+  MaterialModel? _selectedMaterial;
 
   List<Customer> _customers = [];
   List<Printer> _printers = [];
-  List<MaterialItem> _materials = [];
+  List<MaterialModel> _materials = [];
   final List<Map<String, dynamic>> _items = [];
 
   @override
@@ -116,6 +116,17 @@ class _QuotationPageState extends State<QuotationPage> {
   }
 
   @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    _locationController.dispose();
+    _descController.dispose();
+    _weightController.dispose();
+    _pricePerGramController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Make Quotation')),
@@ -191,7 +202,7 @@ class _QuotationPageState extends State<QuotationPage> {
             }).toList(),
             onChanged: (val) => setState(() => _selectedPrinter = val),
           ),
-          DropdownButton<MaterialItem>(
+          DropdownButton<MaterialModel>(
             isExpanded: true,
             value: _selectedMaterial,
             hint: const Text('Select Material Reel'),
