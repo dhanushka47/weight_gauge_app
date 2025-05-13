@@ -24,9 +24,23 @@ class _ViewMaterialPageState extends State<ViewMaterialPage> {
     setState(() => _materials = data);
   }
 
-  Future<void> _markOutOfStock(int id) async {
-    await MaterialDatabase.instance.markOutOfStock(id);
-    await _loadMaterials(); // refresh UI
+  Future<void> _deleteMaterial(int id) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('Confirm Deletion'),
+        content: const Text('Are you sure you want to delete this material?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await MaterialDatabase.instance.deleteMaterial(id);
+      await _loadMaterials();
+    }
   }
 
   void _showMaterialDetails(MaterialModel mat) {
@@ -78,15 +92,10 @@ class _ViewMaterialPageState extends State<ViewMaterialPage> {
                   fit: BoxFit.cover,
                 ),
                 title: Text('${mat.materialId} • ${mat.type} (${mat.color})'),
-                subtitle: Text('Weight: ${mat.weight}g'),
-                trailing: mat.isOutOfStock
-                    ? const Text(
-                  'Out of Stock',
-                  style: TextStyle(color: Colors.red),
-                )
-                    : TextButton(
-                  child: const Text('Mark Out'),
-                  onPressed: () => _markOutOfStock(mat.id!),
+                subtitle: Text('Available: ${mat.availableGrams}g'),
+                trailing: IconButton(
+                  icon: const Icon(Icons.delete, color: Colors.red),
+                  onPressed: () => _deleteMaterial(mat.id!),
                 ),
               ),
             ),

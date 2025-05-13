@@ -49,6 +49,25 @@ class InvoiceDatabase {
     await db.insert('invoices', invoice.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  Future<void> updateInvoice(Invoice invoice) async {
+    final db = await instance.database;
+    await db.update(
+      'invoices',
+      invoice.toMap(),
+      where: 'id = ?',
+      whereArgs: [invoice.id],
+    );
+  }
+
+  Future<void> deleteInvoice(int id) async {
+    final db = await instance.database;
+    await db.delete(
+      'invoices',
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
   Future<void> close() async {
     final db = await instance.database;
     db.close();

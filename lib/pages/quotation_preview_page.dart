@@ -166,6 +166,7 @@ class _QuotationPreviewPageState extends State<QuotationPreviewPage> {
       newItem['printer'] = (item['printer'] as app.Printer).name;
       final mat = newItem['material'] as MaterialModel;
       newItem['material'] = {
+        'id': mat.id,
         'materialId': mat.materialId,
         'type': mat.type,
         'color': mat.color,

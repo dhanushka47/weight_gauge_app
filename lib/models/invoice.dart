@@ -31,10 +31,12 @@ class Invoice {
       date: map['date'],
       total: (map['total'] as num).toDouble(),
       itemsJson: map['itemsJson'],
-      paidAmount: map['paidAmount'],
+      paidAmount: map['paidAmount'] != null ? (map['paidAmount'] as num).toDouble() : null,
       paidDate: map['paidDate'],
       reelUsed: map['reelUsed'],
-      usedMaterialAmount: map['usedMaterialAmount'],
+      usedMaterialAmount: map['usedMaterialAmount'] != null
+          ? (map['usedMaterialAmount'] as num).toDouble()
+          : null,
     );
   }
 
@@ -51,5 +53,32 @@ class Invoice {
       'reelUsed': reelUsed,
       'usedMaterialAmount': usedMaterialAmount,
     };
+  }
+
+  // ✅ Add this
+  Invoice copyWith({
+    int? id,
+    String? customer,
+    String? phone,
+    String? date,
+    double? total,
+    String? itemsJson,
+    double? paidAmount,
+    String? paidDate,
+    String? reelUsed,
+    double? usedMaterialAmount,
+  }) {
+    return Invoice(
+      id: id ?? this.id,
+      customer: customer ?? this.customer,
+      phone: phone ?? this.phone,
+      date: date ?? this.date,
+      total: total ?? this.total,
+      itemsJson: itemsJson ?? this.itemsJson,
+      paidAmount: paidAmount ?? this.paidAmount,
+      paidDate: paidDate ?? this.paidDate,
+      reelUsed: reelUsed ?? this.reelUsed,
+      usedMaterialAmount: usedMaterialAmount ?? this.usedMaterialAmount,
+    );
   }
 }

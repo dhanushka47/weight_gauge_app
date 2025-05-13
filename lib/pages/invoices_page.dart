@@ -23,8 +23,41 @@ class _InvoicesPageState extends State<InvoicesPage> {
 
   Future<void> _loadInvoices() async {
     final data = await InvoiceDatabase.instance.getAllInvoices();
-    if (!mounted) return;
-    setState(() => _invoices = data);
+    setState(() => _invoices = data.where((i) => i.paidDate == null).toList());
+  }
+
+  Future<void> _markAsPaid(Invoice invoice) async {
+    final updated = invoice.copyWith(paidDate: DateTime.now().toIso8601String());
+
+    await InvoiceDatabase.instance.updateInvoice(updated);
+
+    final filePath = '/storage/emulated/0/Weight Gauge/quotations/quotation_${invoice.id}.pdf';
+    final file = File(filePath);
+    if (await file.exists()) {
+      await file.delete();
+      debugPrint('🗑 Deleted PDF: $filePath');
+    }
+
+    await _loadInvoices();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Marked as paid')));
+    }
+  }
+
+  Future<void> _deleteInvoice(Invoice invoice) async {
+    await InvoiceDatabase.instance.deleteInvoice(invoice.id);
+
+    final filePath = '/storage/emulated/0/Weight Gauge/quotations/quotation_${invoice.id}.pdf';
+    final file = File(filePath);
+    if (await file.exists()) {
+      await file.delete();
+      debugPrint('🗑 Deleted PDF: $filePath');
+    }
+
+    await _loadInvoices();
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Invoice deleted')));
+    }
   }
 
   @override
@@ -49,10 +82,7 @@ class _InvoicesPageState extends State<InvoicesPage> {
             margin: const EdgeInsets.symmetric(vertical: 8),
             color: Colors.orange.shade50,
             child: ListTile(
-              title: Text(
-                invoice.customer,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+              title: Text(invoice.customer, style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -62,38 +92,48 @@ class _InvoicesPageState extends State<InvoicesPage> {
                   Text('Total Payment: Rs. ${invoice.total.toStringAsFixed(2)}'),
                 ],
               ),
-              trailing: IconButton(
-                icon: const Icon(Icons.share),
-                onPressed: () async {
-                  final filePath =
-                      '/storage/emulated/0/Weight Gauge/quotations/quotation_${invoice.id}.pdf';
-                  final file = File(filePath);
-
-                  debugPrint('📄 Checking for PDF at: $filePath');
-
-                  if (await file.exists()) {
-                    final bytes = await file.readAsBytes();
-                    if (!mounted) return;
-                    await Printing.sharePdf(
-                      bytes: bytes,
-                      filename: 'quotation_${invoice.id}.pdf',
-                    );
-                  } else {
-                    if (!mounted) return;
-                    debugPrint('❌ PDF NOT FOUND at: $filePath');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('PDF not found at:\n$filePath')),
-                    );
+              trailing: PopupMenuButton<String>(
+                onSelected: (value) {
+                  if (value == 'share') {
+                    _sharePdf(invoice);
+                  } else if (value == 'delete') {
+                    _deleteInvoice(invoice);
+                  } else if (value == 'paid') {
+                    _markAsPaid(invoice);
                   }
                 },
+                itemBuilder: (_) => [
+                  const PopupMenuItem(value: 'share', child: Text('📤 Share')),
+                  const PopupMenuItem(value: 'paid', child: Text('✅ Mark as Paid')),
+                  const PopupMenuItem(value: 'delete', child: Text('🗑 Delete')),
+                ],
               ),
               onTap: () {
-                // TODO: Navigate to details page if needed
+                // Optionally show details here
               },
             ),
           );
         },
       ),
     );
+  }
+
+  Future<void> _sharePdf(Invoice invoice) async {
+    final filePath = '/storage/emulated/0/Weight Gauge/quotations/quotation_${invoice.id}.pdf';
+    final file = File(filePath);
+
+    debugPrint('📄 Checking for PDF at: $filePath');
+
+    if (await file.exists()) {
+      final bytes = await file.readAsBytes();
+      if (!mounted) return;
+      await Printing.sharePdf(bytes: bytes, filename: 'quotation_${invoice.id}.pdf');
+    } else {
+      if (!mounted) return;
+      debugPrint('❌ PDF NOT FOUND at: $filePath');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('PDF not found at:\n$filePath')),
+      );
+    }
   }
 }

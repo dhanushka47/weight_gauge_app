@@ -88,5 +88,9 @@ class MaterialDatabase {
       whereArgs: [id],
     );
   }
+  Future<void> deleteMaterial(int id) async {
+    final db = await instance.database;
+    await db.delete('materials', where: 'id = ?', whereArgs: [id]);
+  }
 
 }

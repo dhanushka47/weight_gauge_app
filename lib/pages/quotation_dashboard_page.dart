@@ -52,8 +52,10 @@ class _QuotationDashboardPageState extends State<QuotationDashboardPage> {
       if (matId != null) {
         final material = await MaterialDatabase.instance.getMaterialById(matId);
         if (material != null) {
-          final newWeight = material.weight - usedWeight;
-          final updatedMat = material.copyWith(weight: newWeight < 0 ? 0 : newWeight);
+          final newAvailable = material.availableGrams - usedWeight;
+          final updatedMat = material.copyWith(
+            availableGrams: newAvailable < 0 ? 0 : newAvailable,
+          );
           await MaterialDatabase.instance.updateMaterial(updatedMat);
         }
       }
@@ -76,7 +78,6 @@ class _QuotationDashboardPageState extends State<QuotationDashboardPage> {
       ),
     );
 
-
     await QuotationDatabase.instance.deleteQuotation(q.id!);
 
     if (context.mounted) {
@@ -86,6 +87,9 @@ class _QuotationDashboardPageState extends State<QuotationDashboardPage> {
       );
     }
   }
+
+
+
 
   @override
   Widget build(BuildContext context) {
