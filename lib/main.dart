@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'theme.dart';
-import 'dashboard.dart';
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
+import 'pages/splash_screen.dart'; // ✅ Add this
 
-// ✅ 1. Place setupAppDirectories here
 Future<void> setupAppDirectories() async {
   final status = await Permission.manageExternalStorage.request();
   if (!status.isGranted) return;
@@ -20,37 +18,26 @@ Future<void> setupAppDirectories() async {
   for (var dir in [rootDir, pdfDir, dbDir, logDir]) {
     if (!await dir.exists()) {
       await dir.create(recursive: true);
-      debugPrint('📁 Created: ${dir.path}');
-    } else {
-      debugPrint('📁 Exists: ${dir.path}');
     }
   }
 }
 
-Future<void> deleteLocalMaterialDB() async {
-  final dbPath = await getDatabasesPath();
-  final path = join(dbPath, 'materials.db');
-  await deleteDatabase(path);
-}
-
-// ✅ 2. Now main() can use it
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await setupAppDirectories(); // ✅ No longer undefined
-  runApp(const MyApp());
+  await setupAppDirectories();
+  runApp(const WeightGaugeApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class WeightGaugeApp extends StatelessWidget {
+  const WeightGaugeApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Weight Gauge',
+      debugShowCheckedModeBanner: false,
       theme: appTheme,
-      home: const DashboardPage(),
+      home: const SplashScreen(), // ✅ Load splash first
     );
   }
 }
-
-// The rest of your MyHomePage code stays unchanged
