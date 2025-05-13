@@ -22,23 +22,33 @@ class MaterialDatabase {
 
   Future _createDB(Database db, int version) async {
     await db.execute('''
-      CREATE TABLE materials (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        materialId TEXT,
-        type TEXT,
-        color TEXT,
-        brand TEXT,
-        source TEXT,
-        price REAL,
-        shippingCost REAL,
-        weight REAL,
-        purchaseDate TEXT,
-        imagePath TEXT,
-        isOutOfStock INTEGER,
-        availableGrams REAL
-      )
-    ''');
+    CREATE TABLE materials (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      materialId TEXT,
+      type TEXT,
+      color TEXT,
+      brand TEXT,
+      source TEXT,
+      price REAL,
+      shippingCost REAL,
+      weight REAL,
+      purchaseDate TEXT,
+      imagePath TEXT,
+      isOutOfStock INTEGER,
+      availableGrams REAL
+    )
+  ''');
+
+    await db.execute('''
+    CREATE TABLE printings (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      materialId TEXT NOT NULL,
+      date TEXT NOT NULL,
+      usedGrams REAL NOT NULL
+    )
+  ''');
   }
+
 
   Future<void> insertMaterial(MaterialModel mat) async {
     final db = await instance.database;
@@ -92,5 +102,28 @@ class MaterialDatabase {
     final db = await instance.database;
     await db.delete('materials', where: 'id = ?', whereArgs: [id]);
   }
+
+
+  Future<int> getQuotationCount() async {
+    final db = await instance.database;
+    final result = await db.rawQuery('SELECT COUNT(*) FROM quotations');
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  Future<int> getPrintingCount() async {
+    final db = await instance.database;
+    final result = await db.rawQuery('SELECT COUNT(*) FROM printings');
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  Future<int> getPaidInvoicesCount() async {
+    final db = await instance.database;
+    final result = await db.rawQuery("SELECT COUNT(*) FROM invoices WHERE status = 'paid'");
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+
+
+
 
 }

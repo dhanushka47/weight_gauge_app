@@ -72,4 +72,26 @@ class InvoiceDatabase {
     final db = await instance.database;
     db.close();
   }
+
+  Future<int> getInvoiceCount() async {
+    final db = await instance.database;
+    final result = await db.rawQuery('SELECT COUNT(*) FROM invoices');
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  Future<int> getPaidInvoiceCount() async {
+    final db = await instance.database;
+    final result = await db.rawQuery(
+        'SELECT COUNT(*) FROM invoices WHERE paidAmount IS NOT NULL AND paidAmount > 0'
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
+
+  Future<int> getUnpaidInvoiceCount() async {
+    final db = await instance.database;
+    final result = await db.rawQuery(
+        'SELECT COUNT(*) FROM invoices WHERE paidAmount IS NULL OR paidAmount = 0'
+    );
+    return Sqflite.firstIntValue(result) ?? 0;
+  }
 }
