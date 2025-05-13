@@ -26,7 +26,14 @@ class InvoiceDatabase {
       CREATE TABLE invoices (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         customer TEXT NOT NULL,
-        date TEXT NOT NULL
+        phone TEXT NOT NULL,
+        date TEXT NOT NULL,
+        total REAL NOT NULL,
+        itemsJson TEXT NOT NULL,
+        paidAmount REAL,
+        paidDate TEXT,
+        reelUsed TEXT,
+        usedMaterialAmount REAL
       )
     ''');
   }
@@ -39,7 +46,7 @@ class InvoiceDatabase {
 
   Future<void> insertInvoice(Invoice invoice) async {
     final db = await instance.database;
-    await db.insert('invoices', invoice.toMap());
+    await db.insert('invoices', invoice.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> close() async {

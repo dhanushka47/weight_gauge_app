@@ -4,7 +4,6 @@ import '../db/quotation_database.dart';
 import '../db/material_database.dart';
 import '../db/invoice_database.dart'; // ✅ import invoice DB
 import '../models/quotation.dart';
-import '../models/material.dart';
 import '../models/invoice.dart'; // ✅ import invoice model
 import 'invoices_page.dart'; // ✅ page to show finished invoices
 
@@ -60,14 +59,23 @@ class _QuotationDashboardPageState extends State<QuotationDashboardPage> {
       }
     }
 
-    // ✅ Save to Invoice DB BEFORE deleting the quotation
+    final total = items.fold<double>(0, (sum, i) => sum + (i['weight'] * i['price']));
+
     await InvoiceDatabase.instance.insertInvoice(
       Invoice(
         id: q.id!,
         customer: q.customer,
+        phone: q.phone,
         date: q.deliveryDate,
+        total: total,
+        itemsJson: q.itemsJson,
+        paidAmount: null,
+        paidDate: null,
+        reelUsed: null,
+        usedMaterialAmount: null,
       ),
     );
+
 
     await QuotationDatabase.instance.deleteQuotation(q.id!);
 

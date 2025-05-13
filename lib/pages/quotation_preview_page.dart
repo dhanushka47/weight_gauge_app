@@ -6,11 +6,11 @@ import 'package:printing/printing.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:pdf/pdf.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../models/account.dart';
 import '../models/printer.dart' as app;
-import '../models/material.dart'; // <- This contains MaterialModel
+import '../models/material.dart';
 import '../db/quotation_database.dart';
 import '../models/quotation.dart';
 
@@ -50,93 +50,88 @@ class QuotationPreviewPage extends StatelessWidget {
       groupedByPrinter.putIfAbsent(printer, () => []).add(item);
     }
 
+    final total = items.fold<double>(0, (sum, i) => sum + (i['weight'] * i['price']));
+
     pdf.addPage(
       pw.Page(
-        build: (context) => pw.Center(
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Row(
-                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                children: [
-                  if (logo != null) pw.Image(pw.MemoryImage(logo), width: 80),
-                  pw.Column(
-                    crossAxisAlignment: pw.CrossAxisAlignment.end,
-                    children: [
-                      pw.Text(bizName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                      pw.Text(bizAddress, style: pw.TextStyle(fontSize: 10)),
-                      pw.Text('Contact: $bizContact', style: pw.TextStyle(fontSize: 10)),
-                      pw.Text('Quotation', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                      pw.Text('ID: QT${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}'),
-                    ],
-                  ),
-                ],
-              ),
-              pw.SizedBox(height: 12),
-              pw.Text('Customer: $customerName'),
-              pw.Text('Phone: $customerPhone'),
-              pw.Text('Location: $customerLocation'),
-              pw.Text('Proposed Delivery Date: $deliveryDate', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-              pw.SizedBox(height: 10),
-
-              ...groupedByPrinter.entries.map((entry) {
-                final printerName = entry.key;
-                final printerItems = entry.value;
-
-                return pw.Column(children: [
-                  pw.SizedBox(height: 10),
-                  pw.Text('Printer: $printerName', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                  pw.Table.fromTextArray(
-                    headers: ['No', 'Item', 'Material', 'Infill %', 'Weight(g)', 'Price/g', 'Total'],
-                    data: List.generate(printerItems.length, (index) {
-                      final item = printerItems[index];
-                      final total = item['weight'] * item['price'];
-                      final mat = item['material'] as MaterialModel;
-                      final materialText = '${mat.type} - ${mat.color}';
-                      return [
-                        '${index + 1}',
-                        item['description'],
-                        materialText,
-                        '${item['infill']}%',
-                        '${item['weight']}g',
-                        'Rs. ${item['price'].toStringAsFixed(2)}',
-                        'Rs. ${total.toStringAsFixed(2)}',
-                      ];
-                    }),
-                  ),
-                ]);
-              }),
-
-              pw.SizedBox(height: 10),
-              pw.Align(
-                alignment: pw.Alignment.centerRight,
-                child: pw.Text(
-                  'Grand Total: Rs. ${items.fold<double>(0, (sum, i) => sum + (i['weight'] * i['price'])).toStringAsFixed(2)}',
-                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
-                ),
-              ),
-
-              if (accounts.isNotEmpty) ...[
-                pw.SizedBox(height: 20),
-                pw.Text('You can make bank transfer to the following accounts and send the proof of slip:',
-                    style: pw.TextStyle(fontSize: 10)),
-                pw.SizedBox(height: 8),
-                pw.Table.fromTextArray(
-                  headers: ['Bank', 'Branch', 'Account No'],
-                  data: accounts.map((acc) => [acc.bankName, acc.branch, acc.accountNumber]).toList(),
+        build: (context) => pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
+          children: [
+            pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                if (logo != null) pw.Image(pw.MemoryImage(logo), width: 80),
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text(bizName, style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                    pw.Text(bizAddress, style: pw.TextStyle(fontSize: 10)),
+                    pw.Text('Contact: $bizContact', style: pw.TextStyle(fontSize: 10)),
+                    pw.Text('Quotation', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                    pw.Text('ID: QT${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}'),
+                  ],
                 ),
               ],
+            ),
+            pw.SizedBox(height: 10),
+            pw.Text('Customer: $customerName'),
+            pw.Text('Phone: $customerPhone'),
+            pw.Text('Location: $customerLocation'),
+            pw.Text('Proposed Delivery Date: $deliveryDate', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+            pw.SizedBox(height: 10),
+            ...groupedByPrinter.entries.map((entry) {
+              final printerName = entry.key;
+              final printerItems = entry.value;
 
-              pw.Spacer(),
-              pw.Divider(),
-              pw.Center(
-                child: pw.Text(
-                  'Generated by ALL rights reserved © 2025 brainwavetech.lk',
-                  style: pw.TextStyle(fontSize: 8, color: const PdfColor(0.5, 0.5, 0.5)),
+              return pw.Column(children: [
+                pw.SizedBox(height: 10),
+                pw.Text('Printer: $printerName', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
+                pw.Table.fromTextArray(
+                  headers: ['No', 'Item', 'Material', 'Infill %', 'Weight(g)', 'Price/g', 'Total'],
+                  data: List.generate(printerItems.length, (index) {
+                    final item = printerItems[index];
+                    final total = item['weight'] * item['price'];
+                    final mat = item['material'] as MaterialModel;
+                    final materialText = '${mat.type} - ${mat.color}';
+                    return [
+                      '${index + 1}',
+                      item['description'],
+                      materialText,
+                      '${item['infill']}%',
+                      '${item['weight']}g',
+                      'Rs. ${item['price'].toStringAsFixed(2)}',
+                      'Rs. ${total.toStringAsFixed(2)}',
+                    ];
+                  }),
                 ),
+              ]);
+            }),
+            pw.SizedBox(height: 10),
+            pw.Align(
+              alignment: pw.Alignment.centerRight,
+              child: pw.Text(
+                'Grand Total: Rs. ${total.toStringAsFixed(2)}',
+                style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+              ),
+            ),
+            if (accounts.isNotEmpty) ...[
+              pw.SizedBox(height: 20),
+              pw.Text('Bank transfer details:', style: pw.TextStyle(fontSize: 10)),
+              pw.SizedBox(height: 6),
+              pw.Table.fromTextArray(
+                headers: ['Bank', 'Branch', 'Account No'],
+                data: accounts.map((a) => [a.bankName, a.branch, a.accountNumber]).toList(),
               ),
             ],
-          ),
+            pw.Spacer(),
+            pw.Divider(),
+            pw.Center(
+              child: pw.Text(
+                '© 2025 brainwavetech.lk',
+                style: pw.TextStyle(fontSize: 8, color: PdfColors.grey),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -172,10 +167,25 @@ class QuotationPreviewPage extends StatelessWidget {
     );
 
     await QuotationDatabase.instance.insertQuotation(quotation);
+    debugPrint('✅ Quotation saved to DB');
+
+    // Save PDF to external storage
+    final pdfBytes = await _generatePdf();
+    final permission = await Permission.manageExternalStorage.request();
+    if (permission.isGranted) {
+      final dir = Directory('/storage/emulated/0/Weight Gauge/quotations');
+      if (!await dir.exists()) await dir.create(recursive: true);
+      final filePath = '${dir.path}/quotation_${DateTime.now().millisecondsSinceEpoch}.pdf';
+      final file = File(filePath);
+      await file.writeAsBytes(pdfBytes);
+      debugPrint('✅ PDF saved at: $filePath');
+    } else {
+      debugPrint('❌ Permission not granted to write PDF');
+    }
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Quotation saved to database')),
+        const SnackBar(content: Text('Quotation saved with PDF')),
       );
     }
   }

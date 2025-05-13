@@ -47,10 +47,7 @@ class _DashboardPageState extends State<DashboardPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Welcome to Weight Gauge!',
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
+
             const SizedBox(height: 16),
             Wrap(
               spacing: 12,
