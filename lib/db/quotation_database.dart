@@ -10,41 +10,47 @@ class QuotationDatabase {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('quotation.db');
+    _database = await _initDB('quotations.db');
     return _database!;
   }
 
   Future<Database> _initDB(String filePath) async {
     final dbPath = await getDatabasesPath();
     final path = join(dbPath, filePath);
-    return await openDatabase(path, version: 1, onCreate: _createDB);
+
+    return await openDatabase(
+      path,
+      version: 1,
+      onCreate: _createDB,
+    );
   }
 
-  Future _createDB(Database db, int version) async {
+  Future<void> _createDB(Database db, int version) async {
     await db.execute('''
-  CREATE TABLE quotations (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    customer TEXT NOT NULL,
-    phone TEXT NOT NULL,
-    location TEXT NOT NULL,
-    deliveryDate TEXT NOT NULL,
-    total REAL NOT NULL,
-    createdAt TEXT NOT NULL,
-    itemsJson TEXT NOT NULL,
-    status TEXT NOT NULL
-  )
-''');
+      CREATE TABLE quotations (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        customer TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        location TEXT NOT NULL,
+        deliveryDate TEXT NOT NULL,
+        total REAL NOT NULL,
+        createdAt TEXT NOT NULL,
+        itemsJson TEXT NOT NULL,
+        status TEXT NOT NULL
+      )
+    ''');
   }
 
-  Future<void> insertQuotation(Quotation q) async {
+  /// ✅ Return inserted ID
+  Future<int> insertQuotation(Quotation quotation) async {
     final db = await instance.database;
-    await db.insert('quotations', q.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    return await db.insert('quotations', quotation.toMap());
   }
 
   Future<List<Quotation>> getAllQuotations() async {
     final db = await instance.database;
-    final result = await db.query('quotations');
-    return result.map((e) => Quotation.fromMap(e)).toList();
+    final result = await db.query('quotations', orderBy: 'createdAt DESC');
+    return result.map((json) => Quotation.fromMap(json)).toList();
   }
 
   Future<void> updateQuotation(Quotation quotation) async {

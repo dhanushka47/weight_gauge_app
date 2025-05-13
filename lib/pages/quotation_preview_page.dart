@@ -68,7 +68,6 @@ class QuotationPreviewPage extends StatelessWidget {
                     pw.Text(bizAddress, style: pw.TextStyle(fontSize: 10)),
                     pw.Text('Contact: $bizContact', style: pw.TextStyle(fontSize: 10)),
                     pw.Text('Quotation', style: pw.TextStyle(fontWeight: pw.FontWeight.bold)),
-                    pw.Text('ID: QT${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}'),
                   ],
                 ),
               ],
@@ -166,18 +165,20 @@ class QuotationPreviewPage extends StatelessWidget {
       status: 'pending',
     );
 
-    await QuotationDatabase.instance.insertQuotation(quotation);
-    debugPrint('✅ Quotation saved to DB');
+    final int quotationId = await QuotationDatabase.instance.insertQuotation(quotation);
+    debugPrint('✅ Quotation saved to DB with ID: $quotationId');
 
-    // Save PDF to external storage
     final pdfBytes = await _generatePdf();
+
     final permission = await Permission.manageExternalStorage.request();
     if (permission.isGranted) {
       final dir = Directory('/storage/emulated/0/Weight Gauge/quotations');
       if (!await dir.exists()) await dir.create(recursive: true);
-      final filePath = '${dir.path}/quotation_${DateTime.now().millisecondsSinceEpoch}.pdf';
+
+      final filePath = '${dir.path}/quotation_$quotationId.pdf';
       final file = File(filePath);
       await file.writeAsBytes(pdfBytes);
+
       debugPrint('✅ PDF saved at: $filePath');
     } else {
       debugPrint('❌ Permission not granted to write PDF');
@@ -185,7 +186,7 @@ class QuotationPreviewPage extends StatelessWidget {
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Quotation saved with PDF')),
+        SnackBar(content: Text('Quotation saved with ID $quotationId and PDF generated')),
       );
     }
   }
@@ -225,6 +226,7 @@ class QuotationPreviewPage extends StatelessWidget {
         allowSharing: true,
         allowPrinting: false,
         pdfFileName: 'quotation.pdf',
+
       ),
     );
   }
