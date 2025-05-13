@@ -23,24 +23,24 @@ class _InvoicesPageState extends State<InvoicesPage> {
 
   Future<void> _loadInvoices() async {
     final data = await InvoiceDatabase.instance.getAllInvoices();
-    setState(() => _invoices = data.where((i) => i.paidDate == null).toList());
+    setState(() => _invoices = data);
   }
 
   Future<void> _markAsPaid(Invoice invoice) async {
-    final updated = invoice.copyWith(paidDate: DateTime.now().toIso8601String());
+    final nowPaid = !invoice.isPaid;
+
+    final updated = invoice.copyWith(
+      paidAmount: nowPaid ? invoice.total : 0,
+      paidDate: nowPaid ? DateTime.now().toIso8601String() : null,
+    );
 
     await InvoiceDatabase.instance.updateInvoice(updated);
-
-    final filePath = '/storage/emulated/0/Weight Gauge/quotations/quotation_${invoice.id}.pdf';
-    final file = File(filePath);
-    if (await file.exists()) {
-      await file.delete();
-      debugPrint('🗑 Deleted PDF: $filePath');
-    }
-
     await _loadInvoices();
+
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Marked as paid')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(nowPaid ? '✅ Marked as paid' : '❎ Marked as unpaid')),
+      );
     }
   }
 
@@ -80,9 +80,24 @@ class _InvoicesPageState extends State<InvoicesPage> {
 
           return Card(
             margin: const EdgeInsets.symmetric(vertical: 8),
-            color: Colors.orange.shade50,
+            color: invoice.isPaid ? Colors.green.shade50 : Colors.orange.shade50,
             child: ListTile(
-              title: Text(invoice.customer, style: const TextStyle(fontWeight: FontWeight.bold)),
+              title: Row(
+                children: [
+                  Text(invoice.customer, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  if (invoice.isPaid)
+                    const Padding(
+                      padding: EdgeInsets.only(left: 8.0),
+                      child: Chip(
+                        label: Text('PAID'),
+                        backgroundColor: Colors.green,
+                        labelStyle: TextStyle(color: Colors.white),
+                        visualDensity: VisualDensity.compact,
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                    ),
+                ],
+              ),
               subtitle: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -104,12 +119,15 @@ class _InvoicesPageState extends State<InvoicesPage> {
                 },
                 itemBuilder: (_) => [
                   const PopupMenuItem(value: 'share', child: Text('📤 Share')),
-                  const PopupMenuItem(value: 'paid', child: Text('✅ Mark as Paid')),
+                  PopupMenuItem(
+                    value: 'paid',
+                    child: Text(invoice.isPaid ? '❎ Mark as Unpaid' : '✅ Mark as Paid'),
+                  ),
                   const PopupMenuItem(value: 'delete', child: Text('🗑 Delete')),
                 ],
               ),
               onTap: () {
-                // Optionally show details here
+                // Optionally navigate to detail page
               },
             ),
           );

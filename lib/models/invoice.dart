@@ -55,7 +55,10 @@ class Invoice {
     };
   }
 
-  // ✅ Add this
+  /// ✅ Helper to toggle status in UI
+  bool get isPaid => (paidAmount ?? 0) > 0;
+
+  /// ✅ Used for updating paid/unpaid
   Invoice copyWith({
     int? id,
     String? customer,
