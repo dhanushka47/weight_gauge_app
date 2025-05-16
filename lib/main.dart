@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:io';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'theme.dart';
 import 'pages/splash_screen.dart'; // ✅ Add this
