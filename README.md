@@ -31,7 +31,7 @@ A Flutter-based mobile app designed to help manage 3D printing businesses effici
 - 🧾 **Create and generate printable quotations (PDF)**
 - 📊 **Dashboard with quick summaries and stock chart**
 - 🏦 **Manage payment account details**
-- 🔐 **Reset or backup business data**
+- 🔐 **Reset business data**
 
 ---
 
