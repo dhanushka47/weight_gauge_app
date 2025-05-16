@@ -7,10 +7,12 @@ A Flutter-based mobile app designed to help manage 3D printing businesses effici
 
 ## 🖼️ App Preview
 
-<img src="assets/screenshots/dashboard.jpg" width="300"/>
-<img src="assets/screenshots/quotation.jpg" width="300"/>
-<img src="assets/screenshots/material-stock.jpg" width="300"/>
-<img src="assets/screenshots/business-details.jpg" width="300"/>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/dhanushka47/weight_gauge_app/main/assets/screenshots/dashboard.jpg" width="200" />
+  <img src="https://raw.githubusercontent.com/dhanushka47/weight_gauge_app/main/assets/screenshots/quotation.jpg" width="200" />
+  <img src="https://raw.githubusercontent.com/dhanushka47/weight_gauge_app/main/assets/screenshots/material-stock.jpg" width="200" />
+  <img src="https://raw.githubusercontent.com/dhanushka47/weight_gauge_app/main/assets/screenshots/business-details.jpg" width="200" />
+</p>
 
 ---
 
