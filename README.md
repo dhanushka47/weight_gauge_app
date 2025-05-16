@@ -17,7 +17,7 @@ A Flutter-based mobile app designed to help manage 3D printing businesses effici
 ---
 ## 📥 Download
 
-👉 [Click here to download the latest APK](https://github.com/dhanushka47/weight_gauge_app/releases/download/v1.0.0/app-release.apk
+👉 [Click here to download the latest APK](https://github.com/dhanushka47/weight_gauge_app/releases/download/1.0.0/WeightGauge-v1.0.apk)
 )
 
 
