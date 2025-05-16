@@ -18,11 +18,13 @@ class _AboutUsPageState extends State<AboutUsPage> {
     _loadVersion();
   }
 
-  void _launchUrl(String url) async {
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  Future<void> _launchUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      throw Exception('Could not launch $url');
     }
   }
+
 
   Future<void> _loadVersion() async {
     final info = await PackageInfo.fromPlatform();
@@ -44,7 +46,10 @@ class _AboutUsPageState extends State<AboutUsPage> {
               child: Image.asset('assets/creator.png', width: 120, height: 120),
             ),
             const SizedBox(height: 16),
-            const Text('Founder BrainWaveTech', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const Text(
+              'Founder BrainWaveTech',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 8),
             const Text('Mechatronics Engineer'),
             const SizedBox(height: 16),
@@ -57,9 +62,14 @@ class _AboutUsPageState extends State<AboutUsPage> {
               title: const Text('dhanushka.fiver.lk@gmail.com'),
             ),
             ListTile(
-              leading: const Icon(Icons.link),
-              title: const Text('GitHub'),
-              onTap: () => _launchUrl('https://github.com/dhanushka47'),
+              leading: const Icon(Icons.code),
+              title: const Text(
+                'Open Source Project\nView on GitHub',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: const Text(
+                  'This app is made open-source for anyone to use and improve.'),
+              onTap: () => _launchUrl('https://github.com/dhanushka47/weight_gauge_app'),
             ),
             const SizedBox(height: 24),
             const Divider(),

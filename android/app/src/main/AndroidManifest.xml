@@ -6,12 +6,13 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
 
-
     <application
         android:label="Weight Gauge"
         android:name="${applicationName}"
         android:requestLegacyExternalStorage="true"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:hardwareAccelerated="true"
+        android:enableOnBackInvokedCallback="true">
 
         <activity
             android:name=".MainActivity"
@@ -20,7 +21,6 @@
             android:taskAffinity=""
             android:theme="@style/LaunchTheme"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
-            android:hardwareAccelerated="true"
             android:windowSoftInputMode="adjustResize">
 
             <!-- Launch theme metadata -->
@@ -41,11 +41,12 @@
             android:value="2" />
     </application>
 
-    <!-- Required for Flutter's text processing -->
+    <!-- Allow launching URLs in browser -->
     <queries>
         <intent>
-            <action android:name="android.intent.action.PROCESS_TEXT" />
-            <data android:mimeType="text/plain" />
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="https" />
         </intent>
     </queries>
 </manifest>
